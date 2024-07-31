@@ -3,57 +3,76 @@ import { GroupCard } from "@components/group-card";
 import { Header } from "@components/header";
 import { Highlight } from "@components/highlight";
 import { ListEmpty } from "@components/list-empty";
-import { useNavigation } from "@react-navigation/native";
+import { Loading } from "@components/loading";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { getAllGroups } from "@storage/group/get-all-groups";
 import UsersThree from "phosphor-react-native/src/icons/UsersThree";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList } from "react-native";
 import theme from "src/theme";
-import { Container, } from "./styles";
+import { Container } from "./styles";
 
-interface GroupsProps {
-  name: string
-  id: string
-}
+export function Groups() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [groups, setGroups] = useState<string[]>([]);
 
-export function Groups(){
-  const [groups, setGroups] = useState<GroupsProps[]>([])
+  const navigation = useNavigation();
 
-  const navigation = useNavigation()
-
-  function handleNewGroup(){
-    navigation.navigate('new-group')
+  function handleNewGroup() {
+    navigation.navigate("new-group");
   }
 
-  return(
+  async function fetchGroups() {
+    try {
+      setIsLoading(true);
+      const data = await getAllGroups();
+      setGroups(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleOpenGroup(group: string) {
+    navigation.navigate("players", { group });
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGroups();
+    }, [])
+  );
+
+  return (
     <Container>
       <Header />
-      <Highlight
-        title="Turmas"
-        subtitle="jogue com a sua turma"
-      />
+      <Highlight title="Turmas" subtitle="jogue com a sua turma" />
 
-      <FlatList
-        data={groups}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => (
-          <GroupCard.Root>
-            <GroupCard.Icon icon={UsersThree} weight="fill" color={theme.COLORS.GREEN_700} />
-            <GroupCard.Title title={item.name} />
-          </GroupCard.Root>
-        )}
-        contentContainerStyle={groups.length === 0 && {flex: 1}}
-        ListEmptyComponent={() => (
-          <ListEmpty
-            message="Que tal cadastrar a primeira turma?"
-          />
-        )}
-      />
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <FlatList
+          data={groups}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <GroupCard.Root onPress={() => handleOpenGroup(item)}>
+              <GroupCard.Icon
+                icon={UsersThree}
+                weight="fill"
+                color={theme.COLORS.GREEN_700}
+              />
+              <GroupCard.Title title={item} />
+            </GroupCard.Root>
+          )}
+          contentContainerStyle={groups.length === 0 && { flex: 1 }}
+          ListEmptyComponent={() => (
+            <ListEmpty message="Que tal cadastrar a primeira turma?" />
+          )}
+        />
+      )}
 
-      <Button
-        onPress={handleNewGroup}
-      >
-        Criar nova turma
-      </Button>
+      <Button onPress={handleNewGroup}>Criar nova turma</Button>
     </Container>
-  )
+  );
 }

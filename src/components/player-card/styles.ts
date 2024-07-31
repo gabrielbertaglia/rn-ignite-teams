@@ -9,8 +9,6 @@ export const Container = styled.View`
   align-items: center;
   margin-bottom: 16px;
 
-  padding: 16px;
-
   border-radius: 6px;
 `;
 
@@ -27,4 +25,7 @@ export const Name = styled.Text`
 export const Icon = styled(MaterialIcons).attrs(({ theme }) => ({
   size: 24,
   color: theme.COLORS.GRAY_200,
-}))``;
+}))`
+  margin-left: 16px;
+  margin-right: 4px;
+`;
